@@ -19,7 +19,7 @@ export class User {
     email: string;
 
     @Column()
-    @Length(4, 100)
+    @Length(5, 100)
     password: string;
 
     @Column()
