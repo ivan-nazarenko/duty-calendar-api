@@ -1,4 +1,4 @@
 export default {
-    jwtSecret: 'test',
+    jwtSecret: process.env.JWT_SECRET,
     expires: '1h'
 };

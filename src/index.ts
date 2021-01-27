@@ -8,11 +8,11 @@ import * as cors from "cors";
 import * as dotenv from 'dotenv';
 import routes from "./routes";
 
+dotenv.config();
+
 createConnection().then(async connection => {
 
     const app = express();
-
-    dotenv.config();
 
     app.use(cors());
     app.use(helmet());
