@@ -22,6 +22,9 @@ export class User {
     @Length(5, 100)
     password: string;
 
+    @Column({ default: false })
+    verified: Boolean;
+
     @Column()
     @CreateDateColumn()
     createdAt: Date;
