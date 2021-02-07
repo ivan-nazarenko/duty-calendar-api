@@ -12,10 +12,10 @@ class MembersListController {
         try {
             const list = await listRepository.findOneOrFail(
                 {
-                    relations: ["user", "member", "duty_events"],
+                    relations: ["members", "dutyEvents"],
                     where: { userId: userId }
                 });
-
+            console.log(list);
             res.send(list);
         } catch {
             res.status(404).send("List not found");
