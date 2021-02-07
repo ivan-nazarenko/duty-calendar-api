@@ -25,10 +25,7 @@ export class Member {
     @Length(0, 150)
     email?: string;
 
-    @Column()
-    membersListId: number;
-
     @ManyToOne(() => MembersList, membersLists => membersLists.members)
-    @JoinColumn({name: "membersListId"})
+    @JoinColumn()
     membersList: MembersList;
 }
