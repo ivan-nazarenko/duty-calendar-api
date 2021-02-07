@@ -29,15 +29,9 @@ class AuthController {
         try {
             await userRepository.save(user);
         } catch (e) {
-            res.status(409).send("email already in use");
+            res.status(409).send('Email already in use');
             return;
         }
-
-        const token = jwt.sign(
-            { userId: user.id, email: user.email },
-            config.jwtSecret,
-            { expiresIn: config.expires }
-        );
 
         let secret = new SecretCode();
         secret.email = email;
@@ -54,7 +48,7 @@ class AuthController {
             return;
         }
 
-        res.status(201).send(token);
+        res.status(201).send('Account created succesfully');
     };
 
     static login = async (req: Request, res: Response) => {
@@ -82,7 +76,12 @@ class AuthController {
             { expiresIn: "1h" }
         );
 
-        res.send(token);
+        res.status(200).send({
+            id: user.id,
+            email: user.email,
+            accessToken: token,
+            verified: user.verified
+        });
     };
 
     static changePassword = async (req: Request, res: Response) => {
@@ -120,7 +119,7 @@ class AuthController {
     };
 
     static verifyAccount = async (req: Request, res: Response) => {
-        const { userId, secretCode } = req.params;
+        const { userId, secretCode } = req.body;
 
         const userRepository = getRepository(User);
         let user: User;

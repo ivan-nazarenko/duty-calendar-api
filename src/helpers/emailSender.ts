@@ -14,7 +14,7 @@ export const sendVerification = (user: User, code: string) => {
         from: process.env.MAIL_USER,
         to: user.email,
         subject: 'DutyCalendar account verification',
-        text: `Click on this link to verify your email ${process.env.SITE_URL}/verification?token=${code}&email=${user.email}`
+        text: `Click on this link to verify your email ${process.env.SITE_URL}/verification/${code}/${user.id}`
     };
 
     transporter.sendMail(mailOptions, (error, info) => {

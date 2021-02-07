@@ -3,8 +3,7 @@ import {
     PrimaryGeneratedColumn,
     Column,
     CreateDateColumn,
-    UpdateDateColumn,
-    OneToMany
+    UpdateDateColumn
 } from "typeorm";
 import { Length, IsNotEmpty } from "class-validator";
 import * as bcrypt from "bcryptjs";
@@ -32,9 +31,6 @@ export class User {
     @Column()
     @UpdateDateColumn()
     updatedAt: Date;
-
-    @OneToMany(() => MembersList, membersList => membersList.user)
-    membersLists: MembersList[];
 
     hashPassword() {
         this.password = bcrypt.hashSync(this.password, 8);

@@ -3,7 +3,7 @@ import {
     PrimaryGeneratedColumn,
     Column,
     OneToMany,
-    ManyToOne,
+    OneToOne,
     JoinColumn
 } from "typeorm";
 import { Length } from "class-validator";
@@ -23,11 +23,13 @@ export class MembersList {
     @Column()
     userId: string;
 
-    @ManyToOne(() => User, user => user.membersLists)
+    @OneToOne(() => User)
     @JoinColumn({name: "userId"})
     user: User;
 
-    @OneToMany(() => Member, member => member.membersList)
+    @OneToMany(() => Member, member => member.membersList, {
+        cascade: ["insert", "update"]
+    })
     members: Member[];
 
     @OneToMany(() => DutyEvent, dutyEvent => dutyEvent.membersList)
