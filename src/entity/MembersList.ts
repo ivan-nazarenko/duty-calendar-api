@@ -28,7 +28,7 @@ export class MembersList {
     user: User;
 
     @OneToMany(() => Member, member => member.membersList, {
-        cascade: ["insert", "update"]
+        cascade: ["insert", "update", "remove"]
     })
     members: Member[];
 

@@ -21,9 +21,8 @@ export class Member {
     @Length(0, 100)
     lastName: string;
 
-    @Column()
-    @Length(0, 150)
-    email?: string;
+    @Column({default: null, nullable: true})
+    email: string;
 
     @ManyToOne(() => MembersList, membersLists => membersLists.members)
     @JoinColumn()
