@@ -8,5 +8,7 @@ router.get("/", [checkJwt], MembersListController.getMembersList);
 
 router.post("/", [checkJwt], MembersListController.newMembersList);
 
+router.patch("/", [checkJwt], MembersListController.editMembersList);
+
 
 export default router;
