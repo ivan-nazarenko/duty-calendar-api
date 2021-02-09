@@ -5,6 +5,7 @@ export const sendVerification = (user: User, code: string) => {
     let transporter = nodemailer.createTransport({
         service: process.env.MAIL_SERVICE,
         auth: {
+            type: "login",
             user: process.env.MAIL_USER,
             pass: process.env.MAIL_PASS
         }
