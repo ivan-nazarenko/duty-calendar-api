@@ -10,8 +10,7 @@
       "outDir": "./build",
       "emitDecoratorMetadata": true,
       "experimentalDecorators": true,
-      "sourceMap": true,
-      "skipLibCheck": true,
+      "sourceMap": true
    },
    "exclude": ["node_modules"]
 }
