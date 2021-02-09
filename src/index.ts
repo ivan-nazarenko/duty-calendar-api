@@ -8,6 +8,8 @@ import * as cors from "cors";
 import * as dotenv from 'dotenv';
 import routes from "./routes";
 
+const port = process.env.PORT || 5000;
+
 dotenv.config();
 
 createConnection().then(async connection => {
@@ -20,8 +22,8 @@ createConnection().then(async connection => {
 
     app.use("/", routes);
 
-    app.listen(5000, () => {
-        console.log("Server started on port 5000!");
+    app.listen(port, () => {
+        console.log("Server started on port " + port);
     });
     
 }).catch(error => console.log(error));
