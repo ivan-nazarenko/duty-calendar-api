@@ -17,7 +17,6 @@ class MembersListController {
                 });
             res.send(list);
         } catch (err) {
-            console.log(err);
             res.status(404).send("List not found");
         }
     };

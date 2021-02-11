@@ -4,5 +4,5 @@ dotenv.config();
 
 export default {
     jwtSecret: process.env.JWT_SECRET,
-    expires: '12h'
+    expires: '2h'
 };
