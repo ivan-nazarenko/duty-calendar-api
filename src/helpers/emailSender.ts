@@ -1,28 +1,22 @@
-import * as nodemailer from 'nodemailer';
+import * as mailgun from 'mailgun-js';
 import { User } from '../entity/User';
+const mg = mailgun({
+    apiKey: process.env.MAIL_API_KEY,
+    domain: process.env.MAIL_API_DOMAIN,
+    host: "api.eu.mailgun.net"
+});
 
 export const sendVerification = (user: User, code: string) => {
-    let transporter = nodemailer.createTransport({
-        service: process.env.MAIL_SERVICE,
-        auth: {
-            type: "login",
-            user: process.env.MAIL_USER,
-            pass: process.env.MAIL_PASS
-        }
-    });
-
-    let mailOptions = {
-        from: process.env.MAIL_USER,
+    const data = {
+        from: `noreply@dutycalendar.ninja`,
         to: user.email,
-        subject: 'DutyCalendar account verification',
-        text: `Click on this link to verify your email ${process.env.SITE_URL}/verification/${code}/${user.id}`
+        subject: 'Email verification',
+        text: `Click on this link to verify your email ${process.env.SITE_URL}/verification/${code}/${user.id}`,
+        template: 'verification',
+        "h:X-Mailgun-Variables": `{"action_url": "${process.env.SITE_URL}/verification/${code}/${user.id}"}`
     };
 
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            console.log(error);
-        } else {
-            console.log('Email sent: ' + info.response);
-        }
+    mg.messages().send(data, (error, body) => {
+        console.log(error, body);
     });
-}
+};
