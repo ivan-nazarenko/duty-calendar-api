@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, Next } from "express";
 import * as jwt from "jsonwebtoken";
 import { getRepository } from "typeorm";
 import { validate } from "class-validator";
@@ -7,141 +7,148 @@ import config from "../config/config";
 import { SecretCode } from "../entity/SecretCode";
 import * as crypto from 'crypto-random-string';
 import { sendVerification } from '../helpers/emailSender';
+import { HttpException } from "../exceptions/HttpException";
+import { json } from "body-parser";
+import { nextTick } from "process";
 
 class AuthController {
 
-    static register = async (req: Request, res: Response) => {
-        let { email, password } = req.body;
-        let user = new User();
-
-        user.email = email;
-        user.password = password;
-
-        const errors = await validate(user);
-        if (errors.length > 0) {
-            res.status(400).send(errors);
-            return;
-        }
-
-        user.hashPassword();
-
-        const userRepository = getRepository(User);
+    static register = async (req: Request, res: Response, next: Next) => {
         try {
+            let { email, password } = req.body;
+            let user = new User();
+
+            user.email = email;
+            user.password = password;
+
+            const errors = await validate(user);
+
+            if (errors.length > 0) {
+                throw new HttpException(400, 'Validation error');
+            }
+
+            user.hashPassword();
+
+            const userRepository = getRepository(User);
+
+            const emailUser = await userRepository.findOne({ where: { email: email } });
+
+            if (emailUser) {
+                throw new HttpException(409, 'Email already in use');
+            }
+
             await userRepository.save(user);
-        } catch (e) {
-            res.status(409).send('Email already in use');
-            return;
-        }
 
-        let secret = new SecretCode();
-        secret.email = email;
-        secret.user = user;
-        secret.code = crypto({ length: 100, type: 'url-safe' });
+            let secret = new SecretCode();
+            secret.email = email;
+            secret.user = user;
+            secret.code = crypto({ length: 100, type: 'url-safe' });
 
-        const secretRepository = getRepository(SecretCode);
+            const secretRepository = getRepository(SecretCode);
 
-        try {
-            await secretRepository.save(secret);
-            sendVerification(user, secret.code);
+            try {
+                await secretRepository.save(secret);
+                sendVerification(user, secret.code);
+            } catch (error) {
+                throw (error);
+            }
+
+            res.status(201).send('Account created succesfully');
         } catch (error) {
-            res.status(500).send(error.message);
-            return;
+            next(error);
         }
-
-        res.status(201).send('Account created succesfully');
     };
 
-    static login = async (req: Request, res: Response) => {
-        let { email, password } = req.body;
-        if (!(email && password)) {
-            res.status(422).send();
-        }
-
-        const userRepository = getRepository(User);
-        let user: User;
+    static login = async (req: Request, res: Response, next: Next) => {
         try {
-            user = await userRepository.findOneOrFail({ where: { email } });
+            let { email, password } = req.body;
+
+            if (!(email && password)) {
+                throw new HttpException();
+            }
+
+            const userRepository = getRepository(User);
+
+            const user = await userRepository.findOneOrFail({ where: { email } });
+
+            if (!user.checkIfUnencryptedPasswordIsValid(password)) {
+                throw new HttpException(400, 'Login failed');
+            }
+
+            const token = jwt.sign(
+                { userId: user.id, email: user.email },
+                config.jwtSecret,
+                { expiresIn: config.expires }
+            );
+
+            res.status(200).send({
+                id: user.id,
+                email: user.email,
+                accessToken: token,
+                verified: user.verified
+            });
         } catch (error) {
-            res.status(401).send();
+            next(error);
         }
-
-        if (!user.checkIfUnencryptedPasswordIsValid(password)) {
-            res.status(401).send();
-            return;
-        }
-
-        const token = jwt.sign(
-            { userId: user.id, email: user.email },
-            config.jwtSecret,
-            { expiresIn: "1h" }
-        );
-
-        res.status(200).send({
-            id: user.id,
-            email: user.email,
-            accessToken: token,
-            verified: user.verified
-        });
     };
 
-    static changePassword = async (req: Request, res: Response) => {
-        const id = res.locals.jwtPayload.userId;
-
-        const { oldPassword, newPassword } = req.body;
-        if (!(oldPassword && newPassword)) {
-            res.status(400).send();
-        }
-
-        const userRepository = getRepository(User);
-        let user: User;
+    static changePassword = async (req: Request, res: Response, next: Next) => {
         try {
-            user = await userRepository.findOneOrFail(id);
-        } catch (id) {
-            res.status(401).send();
+            const id = res.locals.jwtPayload.userId;
+            const { oldPassword, newPassword } = req.body;
+
+            if (!(oldPassword && newPassword)) {
+                throw new HttpException();
+            }
+
+            const userRepository = getRepository(User);
+
+            const user = await userRepository.findOneOrFail(id);
+
+            if (!user.checkIfUnencryptedPasswordIsValid(oldPassword)) {
+                throw new HttpException();
+            }
+
+            user.password = newPassword;
+
+            const errors = await validate(user);
+
+            if (errors.length > 0) {
+                throw new HttpException();
+            }
+
+            user.hashPassword();
+            await userRepository.save(user);
+
+            res.status(204).send();
+        } catch (error) {
+            next(error);
         }
-
-        if (!user.checkIfUnencryptedPasswordIsValid(oldPassword)) {
-            res.status(401).send();
-            return;
-        }
-
-        user.password = newPassword;
-        const errors = await validate(user);
-        if (errors.length > 0) {
-            res.status(400).send(errors);
-            return;
-        }
-
-        user.hashPassword();
-        userRepository.save(user);
-
-        res.status(204).send();
     };
 
-    static verifyAccount = async (req: Request, res: Response) => {
-        const { userId, secretCode } = req.body;
-
-        const userRepository = getRepository(User);
-        let user: User;
+    static verifyAccount = async (req: Request, res: Response, next: Next) => {
         try {
+            const { userId, secretCode } = req.body;
+
+            const userRepository = getRepository(User);
+
+            let user: User;
+
             user = await userRepository.findOneOrFail(userId);
-        } catch (id) {
-            res.status(401).send();
+
+            const secretRepository = getRepository(SecretCode);
+
+            await secretRepository.findOneOrFail({ where: { email: user.email, code: secretCode } })
+
+
+            user.verified = true;
+            await userRepository.save(user);
+            await secretRepository.delete(user.email);
+
+            res.status(204).send();
+        } catch (error) {
+            next(error);
         }
-
-        const secretRepository = getRepository(SecretCode);
-        let secret: SecretCode;
-        try {
-            secret = await secretRepository.findOneOrFail({ where: { email: user.email, code: secretCode } })
-        } catch {
-            res.status(401).send();
-        }
-
-        user.verified = true;
-        userRepository.save(user);
-        secretRepository.delete(user.email);
-
-        res.status(204).send();
     }
 }
 export default AuthController;
