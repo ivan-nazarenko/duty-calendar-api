@@ -9,7 +9,6 @@ import {
 import { Length } from "class-validator";
 import { Member } from "./Member";
 import { User } from "./User";
-import { DutyEvent } from "./DutyEvent";
 
 @Entity()
 export class MembersList {
@@ -31,7 +30,4 @@ export class MembersList {
         cascade: ["insert", "update", "remove"]
     })
     members: Member[];
-
-    @OneToMany(() => DutyEvent, dutyEvent => dutyEvent.membersList)
-    dutyEvents: DutyEvent[];
 }
