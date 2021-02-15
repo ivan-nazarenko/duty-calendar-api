@@ -14,7 +14,7 @@ class MembersListController {
             const listRepository = getRepository(MembersList);
             const list = await listRepository.findOneOrFail(
                 {
-                    relations: ["members", "dutyEvents"],
+                    relations: ["members"],
                     where: { userId: userId }
                 });
             res.send(list);
@@ -62,7 +62,7 @@ class MembersListController {
             try {
                 list = await listRepository.findOneOrFail(
                     {
-                        relations: ["members", "dutyEvents"],
+                        relations: ["members"],
                         where: { userId: userId }
                     });
             } catch {
