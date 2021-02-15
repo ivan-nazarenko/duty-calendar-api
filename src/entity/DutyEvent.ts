@@ -15,8 +15,8 @@ export class DutyEvent {
     @Column()
     date: Date;
 
-    @Column()
-    status: Boolean;
+    @Column({ default: false })
+    closed: Boolean;
 
     @OneToOne(() => Member)
     @JoinColumn()
