@@ -2,13 +2,10 @@ import {
     Entity,
     PrimaryGeneratedColumn,
     Column,
-    ManyToOne,
-    ManyToMany,
-    JoinTable,
+    OneToOne,
     JoinColumn
 } from "typeorm";
-import { MembersList } from "./MembersList";
-import { User } from "./User";
+import { Member } from "./Member";
 
 @Entity()
 export class DutyEvent {
@@ -21,14 +18,7 @@ export class DutyEvent {
     @Column()
     status: Boolean;
 
-    @Column()
-    listId: number;
-
-    @ManyToOne(() => MembersList, membersList => membersList.dutyEvents)
-    @JoinColumn({name: "listID"})
-    membersList: MembersList;
-
-    @ManyToMany(() => User)
-    @JoinTable()
-    users: User[];
+    @OneToOne(() => Member)
+    @JoinColumn()
+    member: Member;
 }
