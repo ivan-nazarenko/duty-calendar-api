@@ -21,8 +21,14 @@ export class Member {
     @Length(0, 100)
     lastName: string;
 
-    @Column({default: null, nullable: true})
+    @Column({ default: null, nullable: true })
     email: string;
+
+    @Column({ default: false })
+    isNonResident: boolean;
+
+    @Column({ default: false })
+    isPrivileged: boolean;
 
     @ManyToOne(() => MembersList, membersLists => membersLists.members)
     @JoinColumn()
