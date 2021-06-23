@@ -4,7 +4,8 @@ import {
     Column,
     OneToMany,
     OneToOne,
-    JoinColumn
+    JoinColumn,
+    CreateDateColumn
 } from "typeorm";
 import { Length } from "class-validator";
 import { Member } from "./Member";
@@ -22,8 +23,12 @@ export class MembersList {
     @Column()
     userId: string;
 
+    @Column()
+    @CreateDateColumn()
+    createdAt: Date;
+
     @OneToOne(() => User)
-    @JoinColumn({name: "userId"})
+    @JoinColumn({ name: "userId" })
     user: User;
 
     @OneToMany(() => Member, member => member.membersList, {
